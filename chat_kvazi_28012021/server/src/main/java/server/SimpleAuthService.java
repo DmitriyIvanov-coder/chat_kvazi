@@ -55,6 +55,13 @@ public class SimpleAuthService implements AuthService {
         resultSet = statement.executeQuery("SELECT * FROM user");
     }
 
+    public void closeBD() throws SQLException {
+        resultSet.close();
+        statement.close();
+        connection.close();
+    }
+
+
     @Override
     public boolean registration(String login, String password, String nickname) throws SQLException {
         for (UserData user : users) {
