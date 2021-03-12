@@ -20,11 +20,12 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.WindowEvent;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -57,6 +58,10 @@ public class Controller implements Initializable {
     private Stage regStage;
     private RegController regController;
 
+    File file = new File("C:\\Users\\Дмитрий\\Desktop\\GeekBrains\\chatik\\Story.txt");
+
+    private static final int COUNT_TO_PRINT = 10;
+
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
         messagePanel.setVisible(authenticated);
@@ -71,7 +76,12 @@ public class Controller implements Initializable {
         }
 
         setTitle(nickname);
-        textArea.clear();
+
+        if(authenticated){
+            readStory(file);
+        }
+
+
     }
 
     @Override
@@ -81,6 +91,7 @@ public class Controller implements Initializable {
             stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent event) {
+                    //writeStory(file);
                     System.out.println("bye");
                     if (socket != null && !socket.isClosed()) {
                         try {
@@ -92,7 +103,6 @@ public class Controller implements Initializable {
                 }
             });
         });
-
         setAuthenticated(false);
     }
 
@@ -150,6 +160,8 @@ public class Controller implements Initializable {
                             }
                         } else {
                             textArea.appendText(str + "\n");
+                            //writeStory(file);
+                            //System.out.println(textArea.getText());
                         }
                     }
                 } catch (RuntimeException e) {
@@ -157,6 +169,8 @@ public class Controller implements Initializable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
+                    System.out.println(textArea.getText());
+                    writeStory(file);
                     setAuthenticated(false);
                     try {
                         socket.close();
@@ -180,6 +194,53 @@ public class Controller implements Initializable {
                 textField.clear();
                 textField.requestFocus();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void writeStory(File file){
+
+        BufferedWriter writer = null;
+        try {
+            FileWriter fl=new FileWriter(file);
+            writer = new BufferedWriter(fl);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        try {
+            writer.write(textArea.getText());
+           writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void readStory(File file){
+        FileReader fl = null;
+        try {
+            fl = new FileReader(file);
+            BufferedReader reader = new BufferedReader(fl);
+            String str;
+            List<String> linesToPrint = new ArrayList<>();
+            while((str= reader.readLine() )!=null){
+                linesToPrint.add(str);
+            }
+            if (linesToPrint.size()>COUNT_TO_PRINT){
+                linesToPrint =linesToPrint.subList(linesToPrint.size()-COUNT_TO_PRINT, linesToPrint.size());
+            }else{
+                linesToPrint=linesToPrint.subList(0, linesToPrint.size());
+            }
+
+            for (int i = 0; i < linesToPrint.size(); i++) {
+                textArea.appendText(linesToPrint.get(i));
+                textArea.appendText("\n");
+            }
+            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
